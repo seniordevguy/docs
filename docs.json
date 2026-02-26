@@ -18,12 +18,12 @@
   "topbarLinks": [
     {
       "name": "Dashboard",
-      "url": "https://your-instance.com"
+      "url": "https://recall.gallionetech.com"
     }
   ],
   "topbarCtaButton": {
     "name": "Get Started",
-    "url": "https://your-instance.com/signup"
+    "url": "https://recall.gallionetech.com/signup"
   },
   "tabs": [
     {
@@ -73,5 +73,6 @@
   ],
   "footerSocials": {
     "github": "https://github.com/recall-ai"
-  }
+  },
+  "theme": "mint"
 }
