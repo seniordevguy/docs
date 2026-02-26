@@ -16,7 +16,7 @@ Conversations are created implicitly when you send a chat message with a `conver
 Export a conversation as a Markdown file. Returns the full message history formatted with role headers.
 
 ```bash
-curl https://your-instance.com/api/conversations/conv_abc123/export \
+curl https://recall.yourdomain.com/api/conversations/conv_abc123/export \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -o conversation.md
 ```
@@ -38,7 +38,7 @@ The exported file includes:
 Generate a public share link for a conversation.
 
 ```bash
-curl -X POST https://your-instance.com/api/conversations/conv_abc123/share \
+curl -X POST https://recall.yourdomain.com/api/conversations/conv_abc123/share \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -55,7 +55,7 @@ curl -X POST https://your-instance.com/api/conversations/conv_abc123/share \
 Remove the share link and make the conversation private again.
 
 ```bash
-curl -X DELETE https://your-instance.com/api/conversations/conv_abc123/share \
+curl -X DELETE https://recall.yourdomain.com/api/conversations/conv_abc123/share \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -68,7 +68,7 @@ curl -X DELETE https://your-instance.com/api/conversations/conv_abc123/share \
 Full-text search across all of your conversations and message content.
 
 ```bash
-curl "https://your-instance.com/api/search?q=deployment+strategy" \
+curl "https://recall.yourdomain.com/api/search?q=deployment+strategy" \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 

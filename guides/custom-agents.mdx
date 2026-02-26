@@ -12,7 +12,7 @@ Agent profiles let you create specialized AI personas tailored for specific work
 <Tabs>
   <Tab title="API">
     ```bash
-    curl -X POST https://your-instance.com/api/agents \
+    curl -X POST https://recall.yourdomain.com/api/agents \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer rk_your_api_key_here" \
       -d '{
@@ -106,7 +106,7 @@ This is useful for:
 ### Code Reviewer
 
 ```bash
-curl -X POST https://your-instance.com/api/agents \
+curl -X POST https://recall.yourdomain.com/api/agents \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -122,7 +122,7 @@ curl -X POST https://your-instance.com/api/agents \
 ### Data Analyst
 
 ```bash
-curl -X POST https://your-instance.com/api/agents \
+curl -X POST https://recall.yourdomain.com/api/agents \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -138,7 +138,7 @@ curl -X POST https://your-instance.com/api/agents \
 ### Customer Support
 
 ```bash
-curl -X POST https://your-instance.com/api/agents \
+curl -X POST https://recall.yourdomain.com/api/agents \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -154,12 +154,12 @@ curl -X POST https://your-instance.com/api/agents \
 
 ```bash
 # Update an agent
-curl -X PATCH https://your-instance.com/api/agents/agent_abc123 \
+curl -X PATCH https://recall.yourdomain.com/api/agents/agent_abc123 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{"temperature": "0.7"}'
 
 # Delete an agent
-curl -X DELETE https://your-instance.com/api/agents/agent_abc123 \
+curl -X DELETE https://recall.yourdomain.com/api/agents/agent_abc123 \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```

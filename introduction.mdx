@@ -1,53 +1,55 @@
 ---
 title: "Introduction"
-description: "Recall is a self-hosted AI platform with multi-model support, enterprise knowledge management, tool execution, memory, and custom agents."
+description: "Recall is a self-hosted enterprise AI platform that bridges modern language models with legacy business systems — AS/400, COBOL mainframes, and beyond."
 ---
 
 # What is Recall?
 
-Recall is a self-hosted AI platform designed for teams and enterprises. It provides a unified interface for interacting with multiple AI models while layering on enterprise-grade features like knowledge injection, persistent memory, tool execution, and custom agent profiles.
+**Recall** is a self-hosted AI platform purpose-built for enterprises that need to connect modern AI capabilities with legacy infrastructure. Whether your organization runs AS/400 systems, COBOL mainframes, or decades-old ERP platforms, Recall provides a secure, air-gapped bridge between those systems and state-of-the-art language models.
+
+Built by [Recall AI](https://tryrecall.com) in Boca Raton, FL, Recall is designed for organizations where data sensitivity, compliance, and operational continuity are non-negotiable.
 
 <CardGroup cols={2}>
+  <Card title="Legacy System Integration" icon="server">
+    Connect AI to AS/400, COBOL, mainframe databases, and legacy ERPs. Modernize workflows without rewriting decades of business logic.
+  </Card>
+  <Card title="Self-Hosted & Air-Gapped" icon="shield-halved">
+    Deploy on your own infrastructure — Docker, Proxmox, bare metal. Full air-gap support for regulated industries.
+  </Card>
   <Card title="Multi-Model AI" icon="brain">
     Connect any OpenAI-compatible provider — OpenAI, Anthropic, Google, xAI, or OpenRouter. Users can bring their own keys or use org-provided credentials.
   </Card>
   <Card title="Enterprise Knowledge" icon="book">
     Inject organizational knowledge into every conversation. Instructions, facts, documents, and memories — scoped to org, group, or individual users.
   </Card>
-  <Card title="Tool Execution" icon="wrench">
-    Built-in skills for web search, code execution, browser automation, file management, image generation, and more. Configurable per-org with permission controls.
+  <Card title="Autonomous Tool Execution" icon="wrench">
+    Built-in skills for web search, code execution, browser automation, image generation, and third-party integrations. Up to 25 autonomous tool steps per conversation turn.
   </Card>
-  <Card title="Memory & Context" icon="database">
-    Automatic memory extraction from conversations. Semantic retrieval surfaces relevant context. Auto-compaction keeps long conversations within model limits.
-  </Card>
-  <Card title="Custom Agents" icon="robot">
-    Create agent profiles with custom system prompts, model overrides, skill allowlists, and temperature controls. Share across your org.
-  </Card>
-  <Card title="API-First" icon="code">
-    Full REST API with API key authentication. Build integrations, automate workflows, or embed Recall into your own products.
+  <Card title="Multi-Tenant & Secure" icon="building">
+    Org, group, and user scoping for knowledge, agents, and permissions. PII redaction, credential encryption, and sandboxed execution built in.
   </Card>
 </CardGroup>
 
-## Architecture
+## Why Recall?
 
-Recall is a Next.js application backed by a PostgreSQL database. It uses the Vercel AI SDK for streaming model responses and supports any OpenAI-compatible API endpoint.
+Most AI platforms assume a greenfield environment. Recall starts from the reality that enterprises run on systems built over decades — and those systems aren't going anywhere. Recall provides:
 
-**Key components:**
-
-- **Chat Engine** — Streaming AI responses with multi-step tool calling (up to 25 steps per turn)
-- **Knowledge System** — Always-inject and semantic retrieval knowledge with org/group/user scoping
-- **Skill Framework** — Built-in and installable skills with per-org configuration and encryption
-- **Agent Profiles** — Reusable AI personas with model overrides and skill filtering
-- **Tracing** — Full request tracing with tool call spans for observability
-- **PII Detection** — Automatic redaction of SSNs and credit card numbers
+- **Secure connectivity** to legacy databases and APIs via sandboxed tool execution
+- **Knowledge injection** so the AI understands your organization's terminology, processes, and constraints
+- **Custom agents** tailored to specific workflows (data migration, report generation, system queries)
+- **Full observability** with request tracing, tool call spans, and token usage tracking
+- **OAuth integrations** with Google Workspace, GitHub, Microsoft 365, and Slack
 
 ## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Get up and running in 5 minutes
+<CardGroup cols={3}>
+  <Card title="Architecture" icon="diagram-project" href="/architecture">
+    How Recall is built
   </Card>
-  <Card title="Authentication" icon="key" href="/authentication">
-    Learn about API key and session auth
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running
+  </Card>
+  <Card title="Deployment" icon="cloud" href="/deployment">
+    Deploy to your infrastructure
   </Card>
 </CardGroup>

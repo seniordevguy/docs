@@ -1,0 +1,149 @@
+---
+title: "Security"
+description: "Security model — credential handling, container sandboxing, tool gating, and PII protection."
+---
+
+# Security
+
+Recall is designed for enterprise environments where data security is paramount. This page covers the security architecture across authentication, data handling, tool execution, and deployment.
+
+## Authentication & Authorization
+
+### Session Security
+
+- Sessions are managed by [Better Auth](https://better-auth.com) with encrypted cookies
+- Google SSO and email/password authentication supported
+- Session tokens are rotated automatically
+
+### API Key Security
+
+- API keys are prefixed with `rk_` for easy identification
+- Keys are **hashed (SHA-256) before storage** — the plaintext is only returned at creation time
+- Keys support scoping and expiration
+- Keys inherit the creating user's org and role permissions
+
+### Role-Based Access
+
+| Role | Capabilities |
+|------|-------------|
+| **Owner** | Full org control, provider config, user management |
+| **Admin** | Skill management, agent creation, knowledge management |
+| **Member** | Chat, personal API keys, personal knowledge entries |
+
+## Credential Encryption
+
+All sensitive skill configuration — API keys, OAuth tokens, client secrets — is **encrypted at rest** using AES encryption before being stored in PostgreSQL. The encryption key is provided via the `ENCRYPTION_KEY` environment variable and never stored in the database.
+
+OAuth refresh tokens for integrations (Google Workspace, GitHub, Microsoft 365, Slack) are similarly encrypted. Multi-account OAuth tokens are stored per-user and scoped to the authenticated user only.
+
+## Container Sandboxing
+
+Code execution and browser automation run inside **isolated Docker containers**:
+
+- **Separate containers per conversation** — no cross-conversation data leakage
+- **Persistent within a conversation** — files and state survive across tool calls in the same chat
+- **Resource limits** — CPU and memory constraints prevent resource exhaustion
+- **Automatic cleanup** — idle containers are terminated and removed
+- **Network access** — containers can access external resources (configurable; disable for air-gapped deployments)
+
+### Code Execution
+
+The `code_execution` skill runs Python and Node.js code in Docker:
+
+- User code runs as a non-root user inside the container
+- Standard library and common packages (numpy, pandas, requests, etc.) are pre-installed
+- File system is isolated to the container's working directory
+- Output (stdout, stderr, files) is captured and returned to the AI
+
+### Browser Automation
+
+The `browser` skill runs Playwright in a headless Chromium Docker container:
+
+- Each browser session is isolated in its own container
+- No access to the host filesystem or network stack
+- Screenshots and page content are captured and returned to the AI
+
+## Tool Gating
+
+Skills are **database-gated** via the `skillReady()` function. A skill is only available when:
+
+1. It's **installed** for the organization
+2. It has **valid configuration** (API keys, credentials)
+3. It's **not disabled** by an admin
+4. It passes the agent's **skill allowlist/denylist** (if using an agent profile)
+
+There are **no environment variable fallbacks** — if a skill isn't properly configured in the database, it won't appear as available. This prevents accidental exposure of tools.
+
+### Permission Layers
+
+```
+Org Admin enables skill
+    └─> Skill has valid credentials (skillReady)
+        └─> Agent allowlist permits skill (if agent is set)
+            └─> Tool is available to the AI
+```
+
+## PII Protection
+
+Recall automatically detects and redacts sensitive information before sending messages to AI providers:
+
+- **Social Security Numbers** (SSN patterns) — replaced with `[SSN REDACTED]`
+- **Credit Card Numbers** (major card patterns) — replaced with `[CC REDACTED]`
+
+Redaction happens server-side before the API call to the model provider, ensuring sensitive data never leaves your infrastructure.
+
+## Data Isolation
+
+### Multi-Tenant Scoping
+
+All data is scoped to organizations:
+
+- **Conversations** — owned by a user within an org
+- **Knowledge entries** — scoped to org, group, or user
+- **Agent profiles** — scoped to an org
+- **API keys** — scoped to a user within an org
+- **OAuth tokens** — scoped to a user within an org
+
+Cross-org data access is architecturally impossible — all queries include org ID filters.
+
+### Knowledge Scoping
+
+Knowledge entries follow a strict visibility model:
+
+| Scope | Who Can See |
+|-------|------------|
+| `org` | All org members |
+| `group` | Group members only |
+| `user` | Only the creating user |
+
+## Network Security
+
+### Recommended Deployment
+
+- Deploy behind a reverse proxy (nginx/Caddy) with TLS termination
+- Use a private network for database connections
+- Restrict Docker socket access to the Recall application only
+- For air-gapped deployments, use on-premise LLMs and disable network-dependent skills
+
+### External Connections
+
+Recall makes outbound connections to:
+
+| Service | Purpose | Required? |
+|---------|---------|-----------|
+| AI Provider APIs | Model inference | Yes |
+| Brave Search API | Web search skill | Optional |
+| OAuth providers | Integration auth flows | Optional |
+| Docker Hub | Container image pulls | Initial setup only |
+
+In air-gapped mode, all of these can be replaced with on-premise alternatives or disabled entirely.
+
+## Security Best Practices
+
+1. **Rotate the `ENCRYPTION_KEY`** periodically and keep it in a secrets manager
+2. **Set API key expiration** — don't create non-expiring keys
+3. **Use BYOK mode** for sensitive orgs so each user's API calls go through their own provider account
+4. **Review auto-extracted memories** periodically for sensitive content
+5. **Enable audit logging** via the tracing system for compliance
+6. **Restrict skill access** — only enable the skills your organization needs
+7. **Use agent allowlists** to limit tools available in specific workflows

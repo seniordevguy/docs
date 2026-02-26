@@ -1,0 +1,112 @@
+---
+title: "Architecture"
+description: "System architecture overview — Next.js 15, PostgreSQL with pgvector, Docker sandboxing, and SSE streaming."
+---
+
+# Architecture
+
+Recall is a monolithic Next.js 15 application backed by PostgreSQL with pgvector for semantic search. It uses Docker containers for sandboxed code execution and browser automation, and streams AI responses via Server-Sent Events (SSE) using the Vercel AI SDK.
+
+## System Diagram
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    Client (Browser)                  │
+│              Next.js 15 React Frontend               │
+└──────────────────────┬──────────────────────────────┘
+                       │ SSE / REST
+┌──────────────────────▼──────────────────────────────┐
+│                 Next.js 15 Server                    │
+│                                                      │
+│  ┌──────────┐  ┌───────────┐  ┌──────────────────┐  │
+│  │ Chat API │  │ Auth      │  │ Knowledge Engine │  │
+│  │ (SSE)    │  │ (Better   │  │ (pgvector)       │  │
+│  │          │  │  Auth)    │  │                  │  │
+│  └────┬─────┘  └───────────┘  └──────────────────┘  │
+│       │                                              │
+│  ┌────▼──────────────────────────────────────────┐   │
+│  │            Skill Framework                     │   │
+│  │  web_search │ code_exec │ browser │ OAuth...  │   │
+│  └────┬───────────┬────────────┬─────────────────┘   │
+└───────┼───────────┼────────────┼─────────────────────┘
+        │           │            │
+   ┌────▼───┐  ┌───▼────┐  ┌───▼────┐
+   │External │  │Docker  │  │Docker  │
+   │APIs     │  │Python/ │  │Playwright│
+   │(Brave,  │  │Node.js │  │Browser  │
+   │ LLMs)   │  │Sandbox │  │Sandbox  │
+   └─────────┘  └───┬────┘  └────────┘
+                    │
+        ┌───────────▼──────────────┐
+        │  PostgreSQL + pgvector   │
+        │  Conversations, Knowledge│
+        │  Users, Orgs, Skills     │
+        └──────────────────────────┘
+```
+
+## Core Components
+
+### Chat Engine
+
+The chat engine handles streaming AI responses with multi-step tool calling. Each conversation turn can execute up to **25 autonomous tool steps** — the AI can search the web, execute code, browse pages, and chain results together without user intervention.
+
+- **Provider resolution**: User key → Org key → System fallback (OpenRouter)
+- **Streaming**: Vercel AI SDK data streams over SSE
+- **Auto-compaction**: Long conversations are automatically summarized to fit within model context windows
+- **Auto-titling**: First message generates a conversation title via GPT-4o-mini
+
+### Knowledge System
+
+Knowledge entries are injected into conversations using a two-phase approach:
+
+1. **Always-inject**: Entries with `priority: "always"` are included in every request (instructions, policies)
+2. **Semantic retrieval**: Entries with `priority: "relevant"` are matched against the user's message using pgvector cosine similarity with a **0.35 threshold**
+
+Knowledge is scoped hierarchically: **org → group → user**. All applicable scopes are merged at query time.
+
+### Skill Framework
+
+Skills are the tool-use layer. Each skill is registered in the database and gated via `skillReady()` — a skill is only available if it's installed, configured, and has valid credentials. There are **no environment variable fallbacks**; everything goes through the DB.
+
+Skills include:
+- **Web Search** (Brave API)
+- **Code Execution** (Python/Node.js in persistent Docker containers)
+- **Browser Automation** (Playwright in Docker)
+- **Image Generation** (DALL-E and compatible APIs)
+- **OAuth Integrations** (Google Workspace, GitHub, Microsoft 365, Slack)
+- **Weather**, **Memory**, **File I/O**, and more
+
+### Authentication
+
+Recall uses [Better Auth](https://better-auth.com) for authentication:
+- **Google SSO** — OAuth sign-in
+- **Email/Password** — Credential-based authentication
+- **API Keys** — `rk_` prefixed keys for programmatic access, hashed at rest
+
+### Database
+
+PostgreSQL with the **pgvector** extension provides:
+- Relational storage for users, orgs, conversations, messages, knowledge, skills
+- Vector embeddings for semantic knowledge retrieval
+- Full-text search across conversation content
+
+### Docker Sandboxing
+
+Code execution and browser automation run in isolated Docker containers:
+- **Persistent containers per conversation** — state (files, variables) persists across tool calls within the same conversation
+- **Network access** — containers can fetch external resources
+- **Resource limits** — CPU and memory constraints prevent abuse
+- **Automatic cleanup** — containers are removed when conversations are inactive
+
+## Technology Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 15, React, Tailwind CSS |
+| Backend | Next.js API Routes (App Router) |
+| Database | PostgreSQL + pgvector |
+| AI SDK | Vercel AI SDK (SSE streaming) |
+| Auth | Better Auth (Google SSO, credentials) |
+| Sandboxing | Docker (Python, Node.js, Playwright) |
+| Search | Brave Search API |
+| Embeddings | OpenAI text-embedding-3-small |

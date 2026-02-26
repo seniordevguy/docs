@@ -1,0 +1,123 @@
+---
+title: "MCP Servers"
+description: "Connect external tools and data sources to Recall using the Model Context Protocol (MCP)."
+---
+
+# MCP Server Integration
+
+Recall supports the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) for connecting external tool servers. MCP lets you extend Recall's capabilities with custom tools, data sources, and integrations without modifying the core platform.
+
+## What is MCP?
+
+MCP is an open protocol that standardizes how AI applications connect to external tools and data. An MCP server exposes a set of **tools** (functions the AI can call) and **resources** (data the AI can read) over a standardized transport layer.
+
+## Connecting an MCP Server
+
+### Via the Admin Dashboard
+
+1. Navigate to **Admin → Skills → MCP Servers**
+2. Click **Add MCP Server**
+3. Enter the server URL (e.g., `http://localhost:8080/mcp` or `https://mcp.yourservice.com`)
+4. Optionally provide authentication headers
+5. Recall discovers available tools automatically
+
+### Via Environment Configuration
+
+Add MCP server endpoints in your deployment configuration:
+
+```bash
+MCP_SERVERS='[
+  {
+    "name": "legacy-db",
+    "url": "http://localhost:8081/mcp",
+    "description": "AS/400 database connector"
+  },
+  {
+    "name": "internal-tools",
+    "url": "http://tools-service:8082/mcp",
+    "headers": {
+      "Authorization": "Bearer your-token"
+    }
+  }
+]'
+```
+
+## Use Cases
+
+### Legacy System Connectors
+
+The primary use case for MCP in Recall is connecting to legacy enterprise systems:
+
+```
+┌──────────┐     MCP      ┌──────────────┐     ODBC/API    ┌──────────┐
+│  Recall  │ ◄──────────► │  MCP Server  │ ◄──────────────► │  AS/400  │
+│          │              │  (Bridge)    │                  │  System  │
+└──────────┘              └──────────────┘                  └──────────┘
+```
+
+Build an MCP server that translates AI tool calls into legacy system operations:
+
+- **Query AS/400 databases** via ODBC
+- **Execute COBOL programs** and return results
+- **Read/write mainframe datasets**
+- **Interact with legacy APIs** (SOAP, fixed-width formats, etc.)
+
+### Custom Business Tools
+
+Expose internal business logic as MCP tools:
+
+- CRM lookups and updates
+- ERP order management
+- Document management systems
+- Custom reporting engines
+
+### Third-Party Integrations
+
+Connect any service that has an MCP server:
+
+- Database connectors (PostgreSQL, MySQL, MongoDB)
+- Cloud service management (AWS, GCP, Azure)
+- Monitoring and observability tools
+- Custom internal APIs
+
+## Building an MCP Server
+
+A minimal MCP server exposes tools with JSON Schema parameter definitions:
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+
+const server = new McpServer({
+  name: "legacy-connector",
+  version: "1.0.0",
+});
+
+server.tool(
+  "query_inventory",
+  "Query inventory levels from the AS/400 system",
+  {
+    partNumber: z.string().describe("Part number to look up"),
+    warehouse: z.string().optional().describe("Warehouse code"),
+  },
+  async ({ partNumber, warehouse }) => {
+    // Connect to AS/400 and query inventory
+    const result = await queryAS400Inventory(partNumber, warehouse);
+    return {
+      content: [{ type: "text", text: JSON.stringify(result) }],
+    };
+  }
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+## Security Considerations
+
+- MCP servers run **outside** the Recall sandbox — ensure they implement their own authentication and authorization
+- Use **network policies** to restrict which MCP servers the Recall instance can reach
+- MCP server credentials are **encrypted at rest** alongside other skill configurations
+- Audit MCP tool calls via Recall's built-in tracing system
+- For air-gapped deployments, run MCP servers on the same private network as Recall

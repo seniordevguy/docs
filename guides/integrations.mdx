@@ -1,0 +1,132 @@
+---
+title: "Integrations"
+description: "Connect Recall to Google Workspace, GitHub, Microsoft 365, and Slack via OAuth."
+---
+
+# Integrations
+
+Recall supports OAuth integrations with major productivity platforms. Once connected, the AI can read and write data across these services on behalf of users.
+
+## Overview
+
+| Integration | Capabilities |
+|-------------|-------------|
+| **Google Workspace** | Read/send Gmail, manage Calendar events, access Drive files, manage Docs and Sheets |
+| **GitHub** | List repos, read/create issues, manage pull requests, search code |
+| **Microsoft 365** | Outlook email, OneDrive files, Teams messages, Calendar events |
+| **Slack** | Send messages, read channels, search workspace history |
+
+## How OAuth Works in Recall
+
+1. **Admin configures** the OAuth app credentials (client ID + secret) in the Recall admin dashboard
+2. **Users connect** their accounts via the Settings → Integrations page
+3. **Multi-account support** — users can connect multiple accounts per service (e.g., personal + work Google accounts)
+4. **Token management** — OAuth access and refresh tokens are encrypted at rest and automatically refreshed
+
+## Setting Up Google Workspace
+
+### 1. Create a Google Cloud OAuth App
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select an existing one
+3. Navigate to **APIs & Services → Credentials**
+4. Click **Create Credentials → OAuth client ID**
+5. Application type: **Web application**
+6. Add authorized redirect URI: `https://recall.yourdomain.com/api/integrations/google/callback`
+7. Enable the following APIs:
+   - Gmail API
+   - Google Calendar API
+   - Google Drive API
+   - Google Docs API
+   - Google Sheets API
+
+### 2. Configure in Recall
+
+Set the environment variables:
+
+```bash
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-your-client-secret
+```
+
+Or configure via **Admin → Skills → Google Workspace → Configure**.
+
+### 3. Users Connect
+
+Users navigate to **Settings → Integrations → Google Workspace → Connect** and authorize access through Google's consent screen.
+
+## Setting Up GitHub
+
+### 1. Create a GitHub OAuth App
+
+1. Go to **GitHub → Settings → Developer settings → OAuth Apps**
+2. Click **New OAuth App**
+3. Set the authorization callback URL: `https://recall.yourdomain.com/api/integrations/github/callback`
+4. Note the Client ID and generate a Client Secret
+
+### 2. Configure in Recall
+
+```bash
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+```
+
+### 3. Available Skills
+
+Once connected, the AI can:
+- List repositories and branches
+- Read file contents from repos
+- Create, update, and close issues
+- Review and comment on pull requests
+- Search code across repositories
+
+## Setting Up Microsoft 365
+
+### 1. Register an Azure AD App
+
+1. Go to [Azure Portal → App Registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps)
+2. Click **New Registration**
+3. Set redirect URI: `https://recall.yourdomain.com/api/integrations/microsoft/callback`
+4. Under **API Permissions**, add:
+   - `Mail.ReadWrite`
+   - `Calendars.ReadWrite`
+   - `Files.ReadWrite`
+   - `User.Read`
+5. Generate a client secret under **Certificates & secrets**
+
+### 2. Configure in Recall
+
+```bash
+MICROSOFT_CLIENT_ID=your-azure-app-id
+MICROSOFT_CLIENT_SECRET=your-azure-client-secret
+```
+
+## Setting Up Slack
+
+### 1. Create a Slack App
+
+1. Go to [Slack API → Your Apps](https://api.slack.com/apps)
+2. Click **Create New App → From Scratch**
+3. Under **OAuth & Permissions**, add redirect URL: `https://recall.yourdomain.com/api/integrations/slack/callback`
+4. Add bot token scopes: `channels:read`, `chat:write`, `search:read`, `users:read`
+
+### 2. Configure in Recall
+
+```bash
+SLACK_CLIENT_ID=your-slack-client-id
+SLACK_CLIENT_SECRET=your-slack-client-secret
+```
+
+## Multi-Account Support
+
+Users can connect **multiple accounts per integration**. For example, a user might connect both their personal Gmail and a shared team inbox. When the AI uses an integration skill, it can specify which connected account to use, or defaults to the primary account.
+
+Manage connected accounts in **Settings → Integrations**.
+
+## Security
+
+- OAuth tokens (access + refresh) are **encrypted at rest** using AES encryption
+- Tokens are scoped to individual users — the AI can only access services the current user has authorized
+- Token refresh happens automatically and transparently
+- Users can **revoke access** at any time from the Integrations settings page
+- Admin can **disable integrations** org-wide by uninstalling the skill

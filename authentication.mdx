@@ -12,7 +12,7 @@ Recall supports two authentication methods: **API keys** for programmatic access
 API keys are the recommended method for integrations and automation. Pass your key as a Bearer token:
 
 ```bash
-curl https://your-instance.com/api/chat \
+curl https://recall.yourdomain.com/api/chat \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -23,7 +23,7 @@ API keys are prefixed with `rk_` and are scoped to the user and organization tha
 <Tabs>
   <Tab title="API">
     ```bash
-    curl -X POST https://your-instance.com/api/keys \
+    curl -X POST https://recall.yourdomain.com/api/keys \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer rk_existing_key" \
       -d '{
@@ -48,7 +48,7 @@ API keys are prefixed with `rk_` and are scoped to the user and organization tha
 ### Listing Keys
 
 ```bash
-curl https://your-instance.com/api/keys \
+curl https://recall.yourdomain.com/api/keys \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -57,7 +57,7 @@ Returns all keys for the authenticated user (key values are masked).
 ### Revoking a Key
 
 ```bash
-curl -X DELETE https://your-instance.com/api/keys/{key_id} \
+curl -X DELETE https://recall.yourdomain.com/api/keys/{key_id} \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 

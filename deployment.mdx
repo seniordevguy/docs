@@ -1,0 +1,211 @@
+---
+title: "Deployment"
+description: "Deploy Recall with Docker Compose, configure environment variables, and set up on Proxmox LXC."
+---
+
+# Deployment
+
+Recall is designed for self-hosted deployment. This guide covers Docker Compose (recommended), Proxmox LXC containers, and bare-metal setups.
+
+## Prerequisites
+
+- **Docker** 24+ and **Docker Compose** v2
+- **PostgreSQL** 15+ with the `pgvector` extension
+- **Node.js** 20+ (for bare-metal only)
+- A domain name with TLS (recommended)
+
+## Docker Compose (Recommended)
+
+Create a `docker-compose.yml`:
+
+```yaml
+version: "3.8"
+
+services:
+  recall:
+    image: ghcr.io/seniordevguy/recall-platform:latest
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://recall:${DB_PASSWORD}@db:5432/recall
+      BETTER_AUTH_SECRET: ${AUTH_SECRET}
+      BETTER_AUTH_URL: https://recall.yourdomain.com
+      NEXTAUTH_URL: https://recall.yourdomain.com
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: recall
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: recall
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+```
+
+Create a `.env` file:
+
+```bash
+DB_PASSWORD=your-secure-database-password
+AUTH_SECRET=your-random-32-char-secret
+OPENAI_API_KEY=sk-...
+BRAVE_API_KEY=BSA...
+```
+
+Start the stack:
+
+```bash
+docker compose up -d
+```
+
+## Environment Variables
+
+### Required
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string with pgvector |
+| `BETTER_AUTH_SECRET` | Random secret for session encryption (min 32 chars) |
+| `BETTER_AUTH_URL` | Public URL of your Recall instance |
+
+### AI Providers
+
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key (used for embeddings and fallback) |
+| `ANTHROPIC_API_KEY` | Anthropic API key (optional, can configure per-org) |
+| `OPENROUTER_API_KEY` | OpenRouter API key (optional system fallback) |
+
+### Skills
+
+| Variable | Description |
+|----------|-------------|
+| `BRAVE_API_KEY` | Brave Search API key for web search skill |
+| `DOCKER_HOST` | Docker socket path for code execution / browser skills |
+| `WEATHER_API_KEY` | OpenWeatherMap or similar API key |
+
+### OAuth Integrations
+
+| Variable | Description |
+|----------|-------------|
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID (for SSO + Workspace integration) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `GITHUB_CLIENT_ID` | GitHub OAuth app client ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth app client secret |
+| `MICROSOFT_CLIENT_ID` | Microsoft Entra app client ID |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft Entra app client secret |
+| `SLACK_CLIENT_ID` | Slack app client ID |
+| `SLACK_CLIENT_SECRET` | Slack app client secret |
+
+### Optional
+
+| Variable | Description |
+|----------|-------------|
+| `PORT` | Server port (default: 3000) |
+| `NODE_ENV` | `production` for production deployments |
+| `ENCRYPTION_KEY` | AES key for encrypting skill credentials at rest |
+
+## Proxmox LXC Deployment
+
+For Proxmox environments, deploy Recall inside an unprivileged LXC container:
+
+1. **Create an LXC container** with Ubuntu 22.04 or Debian 12, 4GB+ RAM, 2+ CPU cores
+2. **Install Docker** inside the container (requires nesting enabled in Proxmox)
+3. **Enable nesting** in the container options: `Features → Nesting = Yes`
+4. **Follow the Docker Compose instructions** above
+
+```bash
+# Inside the LXC container
+apt update && apt install -y docker.io docker-compose-v2 git
+systemctl enable --now docker
+
+# Clone and deploy
+git clone https://github.com/seniordevguy/recall-platform.git
+cd recall-platform
+cp .env.example .env
+# Edit .env with your values
+docker compose up -d
+```
+
+### Resource Recommendations
+
+| Deployment Size | RAM | CPU | Storage |
+|----------------|-----|-----|---------|
+| Small (< 10 users) | 4 GB | 2 cores | 20 GB |
+| Medium (10–50 users) | 8 GB | 4 cores | 50 GB |
+| Large (50+ users) | 16 GB | 8 cores | 100 GB |
+
+## Air-Gapped Deployment
+
+For fully air-gapped environments:
+
+1. Pre-pull all Docker images on a connected machine and export them
+2. Transfer images to the air-gapped host via secure media
+3. Load images with `docker load`
+4. Configure AI providers to point to an on-premise LLM (e.g., vLLM, Ollama) using OpenAI-compatible API format
+5. Disable skills that require external network access (web search, weather)
+
+```bash
+# On connected machine
+docker save ghcr.io/seniordevguy/recall-platform:latest | gzip > recall.tar.gz
+docker save pgvector/pgvector:pg16 | gzip > pgvector.tar.gz
+
+# On air-gapped host
+docker load < recall.tar.gz
+docker load < pgvector.tar.gz
+```
+
+## Reverse Proxy
+
+Place Recall behind nginx or Caddy for TLS termination:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name recall.yourdomain.com;
+
+    ssl_certificate /etc/ssl/certs/recall.pem;
+    ssl_certificate_key /etc/ssl/private/recall.key;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_buffering off;  # Required for SSE streaming
+    }
+}
+```
+
+<Warning>
+  **SSE Streaming**: Ensure `proxy_buffering off` is set in your reverse proxy configuration. Without this, streamed AI responses will be buffered and delivered all at once instead of progressively.
+</Warning>
+
+## Database Migrations
+
+Recall runs database migrations automatically on startup. For manual migration:
+
+```bash
+npx drizzle-kit push
+```
+
+## Health Check
+
+Verify your deployment:
+
+```bash
+curl https://recall.yourdomain.com/api/health
+```

@@ -14,7 +14,7 @@ Agent profiles are reusable AI personas with custom system prompts, model overri
 </Card>
 
 ```bash
-curl https://your-instance.com/api/agents \
+curl https://recall.yourdomain.com/api/agents \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -29,7 +29,7 @@ curl https://your-instance.com/api/agents \
 </Card>
 
 ```bash
-curl https://your-instance.com/api/agents/agent_abc123 \
+curl https://recall.yourdomain.com/api/agents/agent_abc123 \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -42,7 +42,7 @@ curl https://your-instance.com/api/agents/agent_abc123 \
 Requires **admin** or **owner** role.
 
 ```bash
-curl -X POST https://your-instance.com/api/agents \
+curl -X POST https://recall.yourdomain.com/api/agents \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -98,7 +98,7 @@ curl -X POST https://your-instance.com/api/agents \
 Requires **admin** or **owner** role.
 
 ```bash
-curl -X PATCH https://your-instance.com/api/agents/agent_abc123 \
+curl -X PATCH https://recall.yourdomain.com/api/agents/agent_abc123 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -118,7 +118,7 @@ All fields are optional — only provided fields are updated.
 Requires **admin** or **owner** role.
 
 ```bash
-curl -X DELETE https://your-instance.com/api/agents/agent_abc123 \
+curl -X DELETE https://recall.yourdomain.com/api/agents/agent_abc123 \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -127,7 +127,7 @@ curl -X DELETE https://your-instance.com/api/agents/agent_abc123 \
 Pass the `agentId` parameter when calling the chat endpoint:
 
 ```bash
-curl -X POST https://your-instance.com/api/chat \
+curl -X POST https://recall.yourdomain.com/api/chat \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{

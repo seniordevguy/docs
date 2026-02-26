@@ -14,7 +14,7 @@ Skills are tools that the AI can use during conversations — web search, code e
 </Card>
 
 ```bash
-curl -X POST https://your-instance.com/api/skills/install \
+curl -X POST https://recall.yourdomain.com/api/skills/install \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -42,7 +42,7 @@ curl -X POST https://your-instance.com/api/skills/install \
 Get the current configuration for a built-in skill. Requires **admin** or **owner** role.
 
 ```bash
-curl https://your-instance.com/api/skills/builtin/builtin-web_search/config \
+curl https://recall.yourdomain.com/api/skills/builtin/builtin-web_search/config \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -55,7 +55,7 @@ curl https://your-instance.com/api/skills/builtin/builtin-web_search/config \
 Update the configuration for an installed skill.
 
 ```bash
-curl -X PUT https://your-instance.com/api/skills/inst_abc123/config \
+curl -X PUT https://recall.yourdomain.com/api/skills/inst_abc123/config \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -77,7 +77,7 @@ curl -X PUT https://your-instance.com/api/skills/inst_abc123/config \
 </Card>
 
 ```bash
-curl -X DELETE https://your-instance.com/api/skills/inst_abc123 \
+curl -X DELETE https://recall.yourdomain.com/api/skills/inst_abc123 \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -87,19 +87,19 @@ Recall ships with a set of built-in skills that can be enabled per organization:
 
 | Skill | Description |
 |-------|-------------|
-| `web_search` | Search the web using Brave, Google, or other providers |
-| `web_fetch` | Fetch and extract content from URLs |
-| `execute_code` | Run Python, Node.js, or Bash in sandboxed Docker containers |
-| `browser` | Full browser automation with Playwright |
+| `web_search` | Search the web using the Brave Search API |
+| `code_execution` | Run Python and Node.js in persistent, sandboxed Docker containers |
+| `browser` | Full browser automation with Playwright in Docker |
+| `image_generation` | Generate images via DALL-E or compatible APIs |
+| `google_workspace` | Gmail, Calendar, Drive, Docs, Sheets (OAuth) |
+| `github` | Repos, issues, pull requests, code search (OAuth) |
+| `microsoft_365` | Outlook, OneDrive, Teams, Calendar (OAuth) |
+| `slack` | Messaging, channel access, workspace search (OAuth) |
 | `weather` | Weather forecasts and current conditions |
-| `image_generation` | Generate images via DALL-E or other providers |
-| `image_analysis` | Analyze images with vision models |
-| `memory_search` | Search saved memories and context |
-| `memory_save` | Save information for future retrieval |
-| `news_search` | Search recent news articles |
-| `file_write` | Create and write files |
-| `file_read` | Read file contents |
-| `sql_query` | Query business databases (with security restrictions) |
+
+<Note>
+  Skills are **database-gated** via the `skillReady()` function. A skill only appears as available to the AI when it is installed, has valid configuration, and is not disabled by an admin. There are no environment variable fallbacks.
+</Note>
 
 ## Skill Permissions
 

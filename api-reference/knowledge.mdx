@@ -14,7 +14,7 @@ Knowledge entries are pieces of information that Recall injects into AI conversa
 </Card>
 
 ```bash
-curl "https://your-instance.com/api/knowledge?scope=org&type=instruction" \
+curl "https://recall.yourdomain.com/api/knowledge?scope=org&type=instruction" \
   -H "Authorization: Bearer rk_your_api_key_here"
 ```
 
@@ -61,7 +61,7 @@ curl "https://your-instance.com/api/knowledge?scope=org&type=instruction" \
 </Card>
 
 ```bash
-curl -X POST https://your-instance.com/api/knowledge \
+curl -X POST https://recall.yourdomain.com/api/knowledge \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -123,7 +123,7 @@ curl -X POST https://your-instance.com/api/knowledge \
 </Card>
 
 ```bash
-curl -X PATCH https://your-instance.com/api/knowledge \
+curl -X PATCH https://recall.yourdomain.com/api/knowledge \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{
@@ -146,7 +146,7 @@ All other fields (`title`, `content`, `type`, `priority`, `scope`, `category`, `
 </Card>
 
 ```bash
-curl -X DELETE https://your-instance.com/api/knowledge \
+curl -X DELETE https://recall.yourdomain.com/api/knowledge \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer rk_your_api_key_here" \
   -d '{"id": "kn_abc123"}'

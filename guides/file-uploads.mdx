@@ -1,0 +1,112 @@
+---
+title: "File Uploads"
+description: "Upload images, PDFs, and documents to include in AI conversations."
+---
+
+# File Uploads
+
+Recall supports file uploads in conversations. Attach images, PDFs, Word documents, and text files — the AI can see, read, and analyze them.
+
+## Supported File Types
+
+| Type | Formats | How It's Processed |
+|------|---------|-------------------|
+| **Images** | JPEG, PNG, GIF, WebP | Sent as vision content to multimodal models |
+| **Documents** | PDF, DOCX | Text extracted and included in the message context |
+| **Text** | TXT, MD, CSV, JSON, code files | Content appended to the message as-is |
+
+## Uploading via the UI
+
+1. Click the **attachment icon** in the chat input
+2. Select one or more files
+3. Files appear as previews in the message composer
+4. Send your message — files are included with the request
+
+## Uploading via the API
+
+Include files in the `files` array of the chat request:
+
+### Image Upload
+
+```bash
+curl -X POST https://recall.yourdomain.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "What does this diagram show?"}
+    ],
+    "files": [
+      {
+        "name": "architecture.png",
+        "type": "image/png",
+        "data": "iVBORw0KGgo..."
+      }
+    ]
+  }'
+```
+
+### Document Upload
+
+```bash
+curl -X POST https://recall.yourdomain.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Summarize this document"}
+    ],
+    "files": [
+      {
+        "name": "report.pdf",
+        "type": "application/pdf",
+        "data": "JVBERi0xLjQ..."
+      }
+    ]
+  }'
+```
+
+### Text File Upload
+
+```bash
+curl -X POST https://recall.yourdomain.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Review this code"}
+    ],
+    "files": [
+      {
+        "name": "app.py",
+        "type": "text/plain",
+        "content": "import flask\n\napp = flask.Flask(__name__)\n..."
+      }
+    ]
+  }'
+```
+
+## File Object Schema
+
+<ParamField body="name" type="string" required>
+  Filename including extension.
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  MIME type (e.g., `image/jpeg`, `application/pdf`, `text/plain`).
+</ParamField>
+
+<ParamField body="data" type="string">
+  Base64-encoded file content. Use for binary files (images, PDFs, DOCX). Supports optional `data:` URI prefix.
+</ParamField>
+
+<ParamField body="content" type="string">
+  Plain text content. Use for text files instead of base64 encoding.
+</ParamField>
+
+## Notes
+
+- **Model support**: Image uploads require a multimodal model (GPT-4o, Claude Sonnet/Opus, Gemini). Text and document uploads work with any model.
+- **Size limits**: Files are limited by the API request size. For large documents, consider uploading as knowledge entries instead.
+- **Multiple files**: You can attach multiple files in a single message.
+- **PDF extraction**: PDF text is extracted server-side; scanned PDFs without OCR text may not be readable.
