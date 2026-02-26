@@ -1,0 +1,77 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Recall AI Platform",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#7c3aed",
+    "light": "#a78bfa",
+    "dark": "#5b21b6",
+    "anchors": {
+      "from": "#7c3aed",
+      "to": "#5b21b6"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://your-instance.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://your-instance.com/signup"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/recall-ai"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "authentication"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/chat",
+        "api-reference/conversations",
+        "api-reference/knowledge",
+        "api-reference/agents",
+        "api-reference/skills",
+        "api-reference/keys"
+      ]
+    },
+    {
+      "group": "SDKs",
+      "pages": []
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/enterprise-setup",
+        "guides/knowledge-management",
+        "guides/custom-agents"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/recall-ai"
+  }
+}
