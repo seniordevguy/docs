@@ -1,0 +1,165 @@
+---
+title: "Custom Agents"
+description: "Create specialized AI agent profiles with custom prompts, model overrides, and skill controls."
+---
+
+# Custom Agents
+
+Agent profiles let you create specialized AI personas tailored for specific workflows. Each agent can have its own system prompt, model, temperature, token limits, and skill access controls.
+
+## Creating an Agent
+
+<Tabs>
+  <Tab title="API">
+    ```bash
+    curl -X POST https://your-instance.com/api/agents \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer rk_your_api_key_here" \
+      -d '{
+        "name": "Technical Writer",
+        "description": "Writes clear, structured technical documentation",
+        "systemPrompt": "You are a technical writer specializing in developer documentation. Write in active voice, use consistent terminology, and include code examples. Structure content with clear headers and progressive disclosure.",
+        "model": "anthropic/claude-sonnet-4-20250514",
+        "temperature": "0.4",
+        "maxTokens": "16384",
+        "isPublic": true
+      }'
+    ```
+  </Tab>
+  <Tab title="Dashboard">
+    Navigate to **Admin → Agents → Create Agent**. Fill in the name, description, system prompt, and configure model and skill settings.
+  </Tab>
+</Tabs>
+
+## System Prompt Design
+
+Agent system prompts **replace** the org default system prompt entirely. They support the same `{{variable}}` placeholders:
+
+```
+You are {{assistant_name}}, a code review assistant for {{org_name}}.
+
+Current reviewer: {{user_name}}
+Date: {{date}}
+
+## Your Role
+- Review code for security vulnerabilities, performance issues, and maintainability
+- Be specific: reference line numbers and suggest concrete fixes
+- Rate severity: critical, warning, or suggestion
+```
+
+<Tip>
+  If you want to **extend** the org prompt rather than replace it, copy the org's system prompt and add your customizations at the end.
+</Tip>
+
+## Skill Allowlists
+
+Control which tools an agent can use with `enabledSkills` (allowlist) or `disabledSkills` (denylist):
+
+### Allowlist Mode
+
+Only the specified skills are available:
+
+```json
+{
+  "name": "Research Assistant",
+  "enabledSkills": ["web_search", "web_fetch", "news_search", "memory_save"],
+  "systemPrompt": "You are a research assistant. Search the web, read sources, and synthesize findings."
+}
+```
+
+### Denylist Mode
+
+All skills except the specified ones are available:
+
+```json
+{
+  "name": "Safe Chat",
+  "disabledSkills": ["execute_code", "browser", "sql_query", "file_write"],
+  "systemPrompt": "You are a helpful assistant. Answer questions using your knowledge and web search."
+}
+```
+
+<Note>
+  If `enabledSkills` is set and non-empty, it takes precedence over `disabledSkills`.
+</Note>
+
+## Model Overrides
+
+Lock an agent to a specific model regardless of user selection:
+
+```json
+{
+  "name": "Fast Responder",
+  "model": "openai/gpt-4o-mini",
+  "temperature": "0.2",
+  "maxTokens": "4096"
+}
+```
+
+This is useful for:
+- Cost control (force a cheaper model for simple tasks)
+- Quality (force a specific model for critical workflows)
+- Speed (use a fast model for real-time interactions)
+
+## Example Agent Profiles
+
+### Code Reviewer
+
+```bash
+curl -X POST https://your-instance.com/api/agents \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "name": "Code Reviewer",
+    "description": "Reviews code for bugs, security issues, and best practices",
+    "systemPrompt": "You are a senior engineer conducting code review. Focus on:\n1. Security vulnerabilities\n2. Performance bottlenecks\n3. Error handling gaps\n4. Code readability\n\nBe specific. Reference line numbers. Suggest fixes with code snippets.",
+    "model": "anthropic/claude-sonnet-4-20250514",
+    "enabledSkills": ["execute_code", "web_search"],
+    "temperature": "0.2"
+  }'
+```
+
+### Data Analyst
+
+```bash
+curl -X POST https://your-instance.com/api/agents \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "name": "Data Analyst",
+    "description": "Analyzes data, creates visualizations, and generates reports",
+    "systemPrompt": "You are a data analyst. When given data or a question:\n1. Write Python code to analyze it\n2. Create clear visualizations\n3. Summarize findings in plain language\n\nAlways show your work with code.",
+    "model": "openai/gpt-4o",
+    "enabledSkills": ["execute_code", "sql_query", "file_write", "web_search"],
+    "temperature": "0.3"
+  }'
+```
+
+### Customer Support
+
+```bash
+curl -X POST https://your-instance.com/api/agents \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "name": "Support Agent",
+    "description": "Handles customer inquiries using knowledge base",
+    "systemPrompt": "You are a customer support agent for {{org_name}}. Be friendly, empathetic, and solution-oriented. Always check the knowledge base before answering. If you cannot find an answer, escalate to a human agent.",
+    "enabledSkills": ["memory_search", "web_fetch"],
+    "temperature": "0.5"
+  }'
+```
+
+## Managing Agents
+
+```bash
+# Update an agent
+curl -X PATCH https://your-instance.com/api/agents/agent_abc123 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{"temperature": "0.7"}'
+
+# Delete an agent
+curl -X DELETE https://your-instance.com/api/agents/agent_abc123 \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```

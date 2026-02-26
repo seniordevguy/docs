@@ -1,0 +1,96 @@
+---
+title: "Enterprise Setup"
+description: "Set up your Recall organization with users, model providers, and skill configuration."
+---
+
+# Enterprise Setup
+
+This guide walks through configuring Recall for your organization.
+
+## 1. Create Your Organization
+
+When the first user signs up, an organization is automatically created. Additional users can be invited through the admin dashboard.
+
+### User Roles
+
+| Role | Capabilities |
+|------|-------------|
+| **Owner** | Full access. Manage org settings, providers, users, groups, skills, and agents. |
+| **Admin** | Same as owner except cannot delete the organization or transfer ownership. |
+| **Member** | Use the chat, access public agents, manage personal settings and API keys. |
+
+## 2. Configure Model Providers
+
+Recall supports multiple AI provider configurations with a fallback chain:
+
+1. **User provider** — Individual users can add their own API key in Settings → Provider
+2. **Org provider** — Admins configure a shared provider for the organization
+3. **System fallback** — OpenRouter (if configured at the instance level)
+
+### Supported Providers
+
+| Provider | Base URL | Models |
+|----------|----------|--------|
+| OpenAI | `https://api.openai.com/v1` | GPT-4o, GPT-4o-mini, o1, o3 |
+| Anthropic | `https://api.anthropic.com/v1` | Claude Opus, Sonnet, Haiku |
+| Google | `https://generativelanguage.googleapis.com/v1beta/openai` | Gemini 2.0 Flash, Pro |
+| xAI | `https://api.x.ai/v1` | Grok |
+| OpenRouter | `https://openrouter.ai/api/v1` | All of the above + hundreds more |
+
+### Bring Your Own Key (BYOK) Mode
+
+Enable `requireUserProvider` in org settings to require every user to configure their own API key. Admins and owners are exempt from this requirement.
+
+## 3. Manage Groups
+
+Groups let you organize users and scope knowledge, personas, and permissions.
+
+Each group can have:
+- **Persona settings** — Additional instructions, tone modifiers, domain knowledge, and example behaviors injected into the system prompt
+- **Custom variables** — Key-value pairs available as `{{variable}}` placeholders in prompts
+- **Knowledge entries** — Group-scoped knowledge visible only to group members
+
+## 4. Configure Skills
+
+Navigate to **Admin → Skills** to manage which tools are available:
+
+1. **Enable/disable built-in skills** — Toggle web search, code execution, browser, etc.
+2. **Configure API keys** — Some skills require external API keys (e.g., weather, news)
+3. **Set tool permissions** — Control which users/roles can access specific tools
+4. **Install additional skills** — Browse the skill catalog for integrations
+
+### Security Considerations
+
+- The SQL query skill has hardcoded restrictions — schema metadata, user tables, API keys, and session tables are always blocked
+- The code execution skill runs in sandboxed Docker containers with network access
+- Sensitive skill configuration (API keys) is encrypted at rest
+- Browser automation runs in isolated Chromium instances
+
+## 5. Customize the System Prompt
+
+Admins can customize the global system prompt in **Admin → Org Settings**. The prompt supports variable substitution:
+
+| Variable | Description |
+|----------|-------------|
+| `{{assistant_name}}` | Name of the AI assistant |
+| `{{user_name}}` | Current user's display name |
+| `{{user_email}}` | Current user's email |
+| `{{user_role}}` | User's org role |
+| `{{user_groups}}` | Comma-separated group names |
+| `{{org_name}}` | Organization name |
+| `{{date}}` | Current date |
+| `{{time}}` | Current time (in user's timezone) |
+| `{{day_of_week}}` | Current day of week |
+| `{{model}}` | Selected model identifier |
+
+Custom variables defined at the org, group, or user level are also available as `{{variable_name}}` and resolve with specificity: user > group > org.
+
+## 6. Set Up Tracing
+
+Recall automatically traces every chat request with:
+- Request metadata (model, provider, user, conversation)
+- Tool call spans with inputs and outputs
+- Token usage (prompt, completion, total)
+- Request duration
+
+View traces in **Admin → Traces** for debugging and cost monitoring.

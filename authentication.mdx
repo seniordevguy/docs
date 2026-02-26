@@ -1,0 +1,84 @@
+---
+title: "Authentication"
+description: "API key authentication, session auth, and key management for the Recall API."
+---
+
+# Authentication
+
+Recall supports two authentication methods: **API keys** for programmatic access and **session cookies** for browser-based access.
+
+## API Key Authentication
+
+API keys are the recommended method for integrations and automation. Pass your key as a Bearer token:
+
+```bash
+curl https://your-instance.com/api/chat \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+API keys are prefixed with `rk_` and are scoped to the user and organization that created them.
+
+### Creating an API Key
+
+<Tabs>
+  <Tab title="API">
+    ```bash
+    curl -X POST https://your-instance.com/api/keys \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer rk_existing_key" \
+      -d '{
+        "name": "Production Integration",
+        "scopes": ["chat", "knowledge"],
+        "expiresInDays": 365
+      }'
+    ```
+
+    <ResponseField name="key" type="string">
+      The full API key. **Only returned once** — store it securely.
+    </ResponseField>
+    <ResponseField name="record" type="object">
+      The key metadata (id, name, scopes, createdAt, expiresAt). Does not include the key itself.
+    </ResponseField>
+  </Tab>
+  <Tab title="Dashboard">
+    Go to **Settings → API Keys → Create New Key**. Name your key, set optional scopes and expiration, and copy the key immediately.
+  </Tab>
+</Tabs>
+
+### Listing Keys
+
+```bash
+curl https://your-instance.com/api/keys \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+Returns all keys for the authenticated user (key values are masked).
+
+### Revoking a Key
+
+```bash
+curl -X DELETE https://your-instance.com/api/keys/{key_id} \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+Revoked keys are immediately invalidated.
+
+## Session Authentication
+
+Browser-based sessions use cookies managed by the auth system. Session auth is used automatically when interacting with Recall through the web UI.
+
+Session auth supports the full range of authentication providers configured for your instance (email/password, OAuth, etc.).
+
+## Request Parameters
+
+<ParamField header="Authorization" type="string">
+  Bearer token with your API key. Format: `Bearer rk_...`
+</ParamField>
+
+## Security Notes
+
+- API keys inherit the permissions of the user who created them
+- Keys are hashed before storage — the plaintext is only returned at creation time
+- Set `expiresInDays` to auto-expire keys
+- Use scopes to limit what a key can access
+- Revoke unused keys promptly

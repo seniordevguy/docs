@@ -1,0 +1,161 @@
+---
+title: "Knowledge"
+description: "Create, list, update, and delete knowledge entries that are injected into AI conversations."
+---
+
+# Knowledge
+
+Knowledge entries are pieces of information that Recall injects into AI conversations. They can be instructions, facts, documents, or memories — scoped to your organization, a group, or an individual user.
+
+## List Knowledge Entries
+
+<Card>
+  `GET /api/knowledge`
+</Card>
+
+```bash
+curl "https://your-instance.com/api/knowledge?scope=org&type=instruction" \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+<ParamField query="scope" type="string">
+  Filter by scope: `org`, `group`, or `user`.
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter by type: `instruction`, `fact`, `document`, or `memory`.
+</ParamField>
+
+<ParamField query="source" type="string">
+  Filter by source: `manual` or `auto` (extracted by memory system).
+</ParamField>
+
+<ResponseField name="entries" type="array">
+  Array of knowledge entry objects.
+</ResponseField>
+
+```json
+{
+  "entries": [
+    {
+      "id": "kn_abc123",
+      "orgId": "org_xyz",
+      "title": "Company coding standards",
+      "content": "Always use TypeScript strict mode...",
+      "type": "instruction",
+      "scope": "org",
+      "priority": "always",
+      "source": "manual",
+      "category": "engineering",
+      "tags": ["typescript", "standards"],
+      "createdAt": "2025-02-15T10:00:00Z"
+    }
+  ]
+}
+```
+
+## Create a Knowledge Entry
+
+<Card>
+  `POST /api/knowledge`
+</Card>
+
+```bash
+curl -X POST https://your-instance.com/api/knowledge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "title": "Company coding standards",
+    "content": "Always use TypeScript strict mode. Prefer functional components. Use Tailwind for styling.",
+    "type": "instruction",
+    "scope": "org",
+    "priority": "always",
+    "category": "engineering",
+    "tags": ["typescript", "standards"]
+  }'
+```
+
+<ParamField body="title" type="string" required>
+  Short title for the knowledge entry.
+</ParamField>
+
+<ParamField body="content" type="string" required>
+  The knowledge content. Can be plain text or markdown.
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Entry type. One of:
+  - `instruction` — Behavioral directives for the AI
+  - `fact` — Factual information about the org
+  - `document` — Reference documents
+  - `memory` — Auto-extracted or manually saved memories
+</ParamField>
+
+<ParamField body="scope" type="string" default="org">
+  Visibility scope:
+  - `org` — Available to all users in the organization
+  - `group` — Available to members of a specific group
+  - `user` — Private to the creating user
+</ParamField>
+
+<ParamField body="priority" type="string">
+  Injection priority. Defaults to `always` for instructions, `relevant` for other types.
+  - `always` — Injected into every conversation
+  - `relevant` — Injected only when semantically relevant to the user's message
+</ParamField>
+
+<ParamField body="category" type="string">
+  Optional category for organization.
+</ParamField>
+
+<ParamField body="tags" type="array">
+  Optional array of string tags.
+</ParamField>
+
+<ParamField body="groupId" type="string">
+  Required when `scope` is `group`. The group ID to scope the entry to.
+</ParamField>
+
+## Update a Knowledge Entry
+
+<Card>
+  `PATCH /api/knowledge`
+</Card>
+
+```bash
+curl -X PATCH https://your-instance.com/api/knowledge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "id": "kn_abc123",
+    "title": "Updated coding standards",
+    "content": "Use TypeScript strict mode. Use Next.js App Router."
+  }'
+```
+
+<ParamField body="id" type="string" required>
+  ID of the knowledge entry to update.
+</ParamField>
+
+All other fields (`title`, `content`, `type`, `priority`, `scope`, `category`, `tags`) are optional — only provided fields are updated.
+
+## Delete a Knowledge Entry
+
+<Card>
+  `DELETE /api/knowledge`
+</Card>
+
+```bash
+curl -X DELETE https://your-instance.com/api/knowledge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{"id": "kn_abc123"}'
+```
+
+<ParamField body="id" type="string" required>
+  ID of the knowledge entry to delete.
+</ParamField>
+
+<Note>
+  Admins can delete org and group entries. Regular users can only delete their own user-scoped entries.
+</Note>

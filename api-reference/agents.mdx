@@ -1,0 +1,139 @@
+---
+title: "Agents"
+description: "Create and manage agent profiles with custom system prompts, model overrides, and skill controls."
+---
+
+# Agents
+
+Agent profiles are reusable AI personas with custom system prompts, model overrides, temperature settings, and skill access controls. Use them to create specialized assistants for different workflows.
+
+## List Agents
+
+<Card>
+  `GET /api/agents`
+</Card>
+
+```bash
+curl https://your-instance.com/api/agents \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+<ResponseField name="agents" type="array">
+  Array of agent profile objects for your organization.
+</ResponseField>
+
+## Get an Agent
+
+<Card>
+  `GET /api/agents/{id}`
+</Card>
+
+```bash
+curl https://your-instance.com/api/agents/agent_abc123 \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+## Create an Agent
+
+<Card>
+  `POST /api/agents`
+</Card>
+
+Requires **admin** or **owner** role.
+
+```bash
+curl -X POST https://your-instance.com/api/agents \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "name": "Code Reviewer",
+    "description": "Reviews code for best practices and security issues",
+    "systemPrompt": "You are a senior code reviewer. Focus on security vulnerabilities, performance issues, and code quality. Be direct and specific.",
+    "model": "anthropic/claude-sonnet-4-20250514",
+    "enabledSkills": ["execute_code", "web_fetch"],
+    "temperature": "0.3",
+    "maxTokens": "8192",
+    "isPublic": true
+  }'
+```
+
+<ParamField body="name" type="string" required>
+  Display name for the agent. A URL-friendly `slug` is auto-generated from the name.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Short description of what the agent does.
+</ParamField>
+
+<ParamField body="systemPrompt" type="string">
+  Custom system prompt that replaces the org default. Supports the same `{{variable}}` placeholders as the org system prompt.
+</ParamField>
+
+<ParamField body="model" type="string">
+  Model override in `provider/model` format. When set, this model is used regardless of the user's selection.
+</ParamField>
+
+<ParamField body="enabledSkills" type="array">
+  Allowlist of skill names. When set, only these skills are available to the agent. If empty, all org-permitted skills are available.
+</ParamField>
+
+<ParamField body="temperature" type="string">
+  Model temperature override (e.g. `"0.3"` for focused output, `"1.0"` for creative output).
+</ParamField>
+
+<ParamField body="maxTokens" type="string">
+  Maximum response tokens (e.g. `"8192"`). Default is 16384.
+</ParamField>
+
+<ParamField body="isPublic" type="boolean" default={true}>
+  Whether all org members can use this agent. When `false`, only admins can access it.
+</ParamField>
+
+## Update an Agent
+
+<Card>
+  `PATCH /api/agents/{id}`
+</Card>
+
+Requires **admin** or **owner** role.
+
+```bash
+curl -X PATCH https://your-instance.com/api/agents/agent_abc123 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "temperature": "0.5",
+    "maxTokens": "16384"
+  }'
+```
+
+All fields are optional — only provided fields are updated.
+
+## Delete an Agent
+
+<Card>
+  `DELETE /api/agents/{id}`
+</Card>
+
+Requires **admin** or **owner** role.
+
+```bash
+curl -X DELETE https://your-instance.com/api/agents/agent_abc123 \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+## Using Agents in Chat
+
+Pass the `agentId` parameter when calling the chat endpoint:
+
+```bash
+curl -X POST https://your-instance.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [{"role": "user", "content": "Review this function: ..."}],
+    "agentId": "agent_abc123"
+  }'
+```
+
+The agent's system prompt, model, temperature, max tokens, and skill filters are all applied automatically.

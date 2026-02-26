@@ -1,0 +1,106 @@
+---
+title: "Conversations"
+description: "Export, share, and search conversations."
+---
+
+# Conversations
+
+Conversations are created implicitly when you send a chat message with a `conversationId`. The API provides endpoints for exporting, sharing, and searching conversation content.
+
+## Export a Conversation
+
+<Card>
+  `GET /api/conversations/{id}/export`
+</Card>
+
+Export a conversation as a Markdown file. Returns the full message history formatted with role headers.
+
+```bash
+curl https://your-instance.com/api/conversations/conv_abc123/export \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -o conversation.md
+```
+
+**Response:** A downloadable Markdown file with `Content-Disposition: attachment` header.
+
+The exported file includes:
+- Conversation title
+- Export timestamp
+- Model used
+- All user and assistant messages (system messages excluded)
+
+## Share a Conversation
+
+<Card>
+  `POST /api/conversations/{id}/share`
+</Card>
+
+Generate a public share link for a conversation.
+
+```bash
+curl -X POST https://your-instance.com/api/conversations/conv_abc123/share \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+<ResponseField name="shareUrl" type="string">
+  Relative URL to the shared conversation, e.g. `/shared/a1b2c3d4e5f6g7h8`
+</ResponseField>
+
+### Revoke Sharing
+
+<Card>
+  `DELETE /api/conversations/{id}/share`
+</Card>
+
+Remove the share link and make the conversation private again.
+
+```bash
+curl -X DELETE https://your-instance.com/api/conversations/conv_abc123/share \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+## Search Conversations
+
+<Card>
+  `GET /api/search?q={query}`
+</Card>
+
+Full-text search across all of your conversations and message content.
+
+```bash
+curl "https://your-instance.com/api/search?q=deployment+strategy" \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+<ParamField query="q" type="string" required>
+  Search query. Minimum 2 characters. Multiple words are matched independently (AND logic) — e.g. `weather miami` matches messages containing both "weather" and "miami".
+</ParamField>
+
+### Response
+
+<ResponseField name="results" type="array">
+  Array of matching messages with conversation context.
+
+  Each result includes:
+  - `messageId` — ID of the matching message
+  - `content` — Message content (may be truncated)
+  - `role` — Message role (`user` or `assistant`)
+  - `createdAt` — Timestamp
+  - `conversationId` — Parent conversation ID
+  - `conversationTitle` — Title of the conversation
+</ResponseField>
+
+```json
+{
+  "results": [
+    {
+      "messageId": "msg_123",
+      "content": "The deployment strategy for the new service...",
+      "role": "assistant",
+      "createdAt": "2025-02-20T15:30:00Z",
+      "conversationId": "conv_abc123",
+      "conversationTitle": "Deployment Planning"
+    }
+  ]
+}
+```

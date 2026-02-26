@@ -1,0 +1,118 @@
+---
+title: "Knowledge Management"
+description: "Manage organizational knowledge with always-inject instructions, semantic retrieval, and automatic memory extraction."
+---
+
+# Knowledge Management
+
+Recall's knowledge system lets you inject organizational context into every AI conversation. Knowledge entries are layered by scope and priority to ensure the AI always has the right information.
+
+## How Knowledge Injection Works
+
+When a user sends a message, Recall assembles knowledge in two phases:
+
+1. **Always-inject** — Entries with `priority: "always"` are included in every conversation. Use this for critical instructions, company policies, and core facts.
+
+2. **Semantic retrieval** — Entries with `priority: "relevant"` are matched against the user's latest message using semantic similarity. Only the most relevant entries are injected, keeping the context window efficient.
+
+## Knowledge Types
+
+<CardGroup cols={2}>
+  <Card title="Instructions" icon="list-check">
+    Behavioral directives for the AI. Examples: coding standards, response format rules, compliance requirements. Default priority: `always`.
+  </Card>
+  <Card title="Facts" icon="circle-info">
+    Factual information about your organization. Examples: product names, team structure, key dates. Default priority: `relevant`.
+  </Card>
+  <Card title="Documents" icon="file-lines">
+    Reference documents. Examples: API docs, runbooks, meeting notes. Default priority: `relevant`.
+  </Card>
+  <Card title="Memories" icon="brain">
+    Auto-extracted or manually saved context from conversations. Examples: user preferences, past decisions, project details. Default priority: `relevant`.
+  </Card>
+</CardGroup>
+
+## Scoping
+
+Knowledge entries are scoped to control visibility:
+
+| Scope | Visible To |
+|-------|-----------|
+| `org` | All users in the organization |
+| `group` | Members of a specific group |
+| `user` | Only the user who created it |
+
+When knowledge is assembled, entries from all applicable scopes are merged:
+- Org-level entries (everyone gets these)
+- Group-level entries (for each group the user belongs to)
+- User-level entries (personal knowledge)
+
+## Automatic Memory Extraction
+
+Recall automatically extracts memories from conversations every 10 messages. The memory extraction system identifies:
+
+- User preferences and communication style
+- Important decisions and their rationale
+- Project details and deadlines
+- Technical specifications discussed
+- Action items and follow-ups
+
+Extracted memories are stored as `memory` type entries with `source: "auto"` and `scope: "user"`.
+
+## Managing Knowledge via API
+
+### Create an always-inject instruction
+
+```bash
+curl -X POST https://your-instance.com/api/knowledge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "title": "Response formatting",
+    "content": "Always use metric units. Format dates as YYYY-MM-DD. Use USD for currency.",
+    "type": "instruction",
+    "scope": "org",
+    "priority": "always"
+  }'
+```
+
+### Create a relevant-only document
+
+```bash
+curl -X POST https://your-instance.com/api/knowledge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "title": "Q1 2025 Product Roadmap",
+    "content": "## Priorities\n1. Launch v2 API\n2. Mobile app beta\n3. Enterprise SSO...",
+    "type": "document",
+    "scope": "org",
+    "priority": "relevant",
+    "category": "product",
+    "tags": ["roadmap", "2025", "q1"]
+  }'
+```
+
+### Create group-scoped knowledge
+
+```bash
+curl -X POST https://your-instance.com/api/knowledge \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "title": "Engineering on-call runbook",
+    "content": "## Incident Response\n1. Check PagerDuty...",
+    "type": "document",
+    "scope": "group",
+    "groupId": "group_engineering_id",
+    "priority": "relevant"
+  }'
+```
+
+## Best Practices
+
+1. **Keep always-inject entries concise** — They consume context window space on every request. Use for critical instructions only.
+2. **Use semantic retrieval for reference material** — Documents, runbooks, and detailed specs work best as `relevant` priority.
+3. **Tag and categorize entries** — Makes management easier as your knowledge base grows.
+4. **Review auto-extracted memories** — Periodically check `source: "auto"` entries to prune inaccurate or outdated memories.
+5. **Scope appropriately** — Don't make everything org-level. Use groups for team-specific knowledge and user scope for personal preferences.

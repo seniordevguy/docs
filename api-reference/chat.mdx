@@ -1,0 +1,156 @@
+---
+title: "Chat"
+description: "Send messages to the AI and receive streaming responses with tool execution."
+---
+
+# Chat
+
+<Card>
+  `POST /api/chat`
+</Card>
+
+Send a message (or conversation history) to the AI and receive a streaming response. The chat endpoint supports multi-model routing, tool execution (up to 25 steps), file uploads, and agent profiles.
+
+## Request Body
+
+<ParamField body="messages" type="array" required>
+  Array of message objects. Each message has a `role` (`user`, `assistant`, or `system`) and `content` (string or multimodal content array).
+</ParamField>
+
+<ParamField body="model" type="string" default="openai/gpt-4o">
+  Model identifier in `provider/model` format. Examples: `openai/gpt-4o`, `anthropic/claude-sonnet-4-20250514`, `google/gemini-2.0-flash`.
+</ParamField>
+
+<ParamField body="conversationId" type="string">
+  ID of an existing conversation to continue. If provided, the full message history is loaded from the database and the new message is appended.
+</ParamField>
+
+<ParamField body="agentId" type="string">
+  ID of an agent profile to use. The agent's system prompt, model override, skill filters, temperature, and max tokens will be applied.
+</ParamField>
+
+<ParamField body="files" type="array">
+  Array of file objects to include with the message. Supports images (sent as vision content), text files (appended to message), and binary documents (PDF, DOCX — sent as file content parts).
+
+  Each file object:
+  - `name` (string) — filename
+  - `type` (string) — MIME type
+  - `data` (string) — base64-encoded content (with or without `data:` URI prefix)
+  - `content` (string) — plain text content (for text files)
+</ParamField>
+
+<ParamField body="activeArtifactId" type="string">
+  ID of an artifact currently open in the UI. Used for document modification workflows.
+</ParamField>
+
+<ParamField body="activeArtifactTitle" type="string">
+  Title of the active artifact.
+</ParamField>
+
+<ParamField body="activeArtifactContent" type="string">
+  Content of the active artifact. When present with a modification intent, the AI will output an updated version.
+</ParamField>
+
+## Response
+
+The response is a **Vercel AI SDK data stream** (SSE). It includes:
+
+- **Text chunks** — streamed tokens of the AI response
+- **Tool calls** — function invocations with arguments (streamed progressively)
+- **Tool results** — return values from executed tools
+- **Usage metadata** — token counts (prompt, completion, total)
+
+## Examples
+
+### Basic Chat
+
+```bash
+curl -X POST https://your-instance.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "What is the capital of France?"}
+    ]
+  }'
+```
+
+### With Model Selection
+
+```bash
+curl -X POST https://your-instance.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Write a haiku about programming"}
+    ],
+    "model": "anthropic/claude-sonnet-4-20250514"
+  }'
+```
+
+### Continuing a Conversation
+
+```bash
+curl -X POST https://your-instance.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Tell me more about that"}
+    ],
+    "conversationId": "clx1abc123def456"
+  }'
+```
+
+### Using an Agent Profile
+
+```bash
+curl -X POST https://your-instance.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Review this pull request"}
+    ],
+    "agentId": "agent_code_reviewer_id"
+  }'
+```
+
+### With Image Upload
+
+```bash
+curl -X POST https://your-instance.com/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "What is in this image?"}
+    ],
+    "files": [
+      {
+        "name": "photo.jpg",
+        "type": "image/jpeg",
+        "data": "base64_encoded_image_data..."
+      }
+    ]
+  }'
+```
+
+## Error Responses
+
+| Status | Description |
+|--------|-------------|
+| 400 | No messages provided |
+| 401 | Missing or invalid authentication |
+| 403 | Organization requires BYOK (bring your own key) — user has no provider configured |
+| 503 | No AI provider configured for the org |
+
+## Behavior Notes
+
+- **Provider resolution**: User provider → Org provider → System fallback (OpenRouter)
+- **Auto-titling**: First message in a conversation auto-generates a title using GPT-4o-mini
+- **PII redaction**: SSNs and credit card numbers are automatically detected and redacted before sending to the model
+- **Auto-compaction**: Long conversations are automatically compacted to fit within the model's context window
+- **Memory extraction**: Every 10 messages, memories are automatically extracted from the conversation
+- **Tool streaming**: Tool call arguments are streamed progressively for real-time UI updates

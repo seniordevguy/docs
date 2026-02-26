@@ -1,0 +1,53 @@
+---
+title: "Introduction"
+description: "Recall is a self-hosted AI platform with multi-model support, enterprise knowledge management, tool execution, memory, and custom agents."
+---
+
+# What is Recall?
+
+Recall is a self-hosted AI platform designed for teams and enterprises. It provides a unified interface for interacting with multiple AI models while layering on enterprise-grade features like knowledge injection, persistent memory, tool execution, and custom agent profiles.
+
+<CardGroup cols={2}>
+  <Card title="Multi-Model AI" icon="brain">
+    Connect any OpenAI-compatible provider — OpenAI, Anthropic, Google, xAI, or OpenRouter. Users can bring their own keys or use org-provided credentials.
+  </Card>
+  <Card title="Enterprise Knowledge" icon="book">
+    Inject organizational knowledge into every conversation. Instructions, facts, documents, and memories — scoped to org, group, or individual users.
+  </Card>
+  <Card title="Tool Execution" icon="wrench">
+    Built-in skills for web search, code execution, browser automation, file management, image generation, and more. Configurable per-org with permission controls.
+  </Card>
+  <Card title="Memory & Context" icon="database">
+    Automatic memory extraction from conversations. Semantic retrieval surfaces relevant context. Auto-compaction keeps long conversations within model limits.
+  </Card>
+  <Card title="Custom Agents" icon="robot">
+    Create agent profiles with custom system prompts, model overrides, skill allowlists, and temperature controls. Share across your org.
+  </Card>
+  <Card title="API-First" icon="code">
+    Full REST API with API key authentication. Build integrations, automate workflows, or embed Recall into your own products.
+  </Card>
+</CardGroup>
+
+## Architecture
+
+Recall is a Next.js application backed by a PostgreSQL database. It uses the Vercel AI SDK for streaming model responses and supports any OpenAI-compatible API endpoint.
+
+**Key components:**
+
+- **Chat Engine** — Streaming AI responses with multi-step tool calling (up to 25 steps per turn)
+- **Knowledge System** — Always-inject and semantic retrieval knowledge with org/group/user scoping
+- **Skill Framework** — Built-in and installable skills with per-org configuration and encryption
+- **Agent Profiles** — Reusable AI personas with model overrides and skill filtering
+- **Tracing** — Full request tracing with tool call spans for observability
+- **PII Detection** — Automatic redaction of SSNs and credit card numbers
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running in 5 minutes
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn about API key and session auth
+  </Card>
+</CardGroup>

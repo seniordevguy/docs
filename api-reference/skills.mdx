@@ -1,0 +1,110 @@
+---
+title: "Skills"
+description: "List, install, configure, and uninstall skills (tools) for your organization."
+---
+
+# Skills
+
+Skills are tools that the AI can use during conversations — web search, code execution, browser automation, image generation, and more. Skills are either **built-in** (bundled with Recall) or **installable** from the catalog.
+
+## Install a Skill
+
+<Card>
+  `POST /api/skills/install`
+</Card>
+
+```bash
+curl -X POST https://your-instance.com/api/skills/install \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "skillSlug": "builtin:web_search",
+    "config": {
+      "apiKey": "your_search_api_key"
+    }
+  }'
+```
+
+<ParamField body="skillSlug" type="string" required>
+  Skill identifier. Built-in skills use the `builtin:` prefix (e.g. `builtin:web_search`, `builtin:weather`).
+</ParamField>
+
+<ParamField body="config" type="object">
+  Skill-specific configuration. Sensitive values (API keys, tokens) are encrypted at rest.
+</ParamField>
+
+## Get Skill Configuration
+
+<Card>
+  `GET /api/skills/builtin/{id}/config`
+</Card>
+
+Get the current configuration for a built-in skill. Requires **admin** or **owner** role.
+
+```bash
+curl https://your-instance.com/api/skills/builtin/builtin-web_search/config \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+## Update Skill Configuration
+
+<Card>
+  `PUT /api/skills/{installationId}/config`
+</Card>
+
+Update the configuration for an installed skill.
+
+```bash
+curl -X PUT https://your-instance.com/api/skills/inst_abc123/config \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer rk_your_api_key_here" \
+  -d '{
+    "config": {
+      "apiKey": "new_api_key",
+      "maxResults": 10
+    }
+  }'
+```
+
+<ParamField body="config" type="object" required>
+  Updated configuration object. Sensitive fields are re-encrypted.
+</ParamField>
+
+## Uninstall a Skill
+
+<Card>
+  `DELETE /api/skills/{installationId}`
+</Card>
+
+```bash
+curl -X DELETE https://your-instance.com/api/skills/inst_abc123 \
+  -H "Authorization: Bearer rk_your_api_key_here"
+```
+
+## Built-in Skills
+
+Recall ships with a set of built-in skills that can be enabled per organization:
+
+| Skill | Description |
+|-------|-------------|
+| `web_search` | Search the web using Brave, Google, or other providers |
+| `web_fetch` | Fetch and extract content from URLs |
+| `execute_code` | Run Python, Node.js, or Bash in sandboxed Docker containers |
+| `browser` | Full browser automation with Playwright |
+| `weather` | Weather forecasts and current conditions |
+| `image_generation` | Generate images via DALL-E or other providers |
+| `image_analysis` | Analyze images with vision models |
+| `memory_search` | Search saved memories and context |
+| `memory_save` | Save information for future retrieval |
+| `news_search` | Search recent news articles |
+| `file_write` | Create and write files |
+| `file_read` | Read file contents |
+| `sql_query` | Query business databases (with security restrictions) |
+
+## Skill Permissions
+
+Skills can be controlled at multiple levels:
+
+1. **Org-level** — Admin enables/disables skills for the entire organization
+2. **Tool permissions** — Fine-grained per-tool access control via the admin dashboard
+3. **Agent-level** — Agent profiles can define skill allowlists or denylists
